@@ -3,6 +3,21 @@ variable "name" {
   type        = string
 }
 
+variable "cluster" {
+  description = "The name of the cluster. which cluster to deploy container into."
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment designation. Which environment to deploy into."
+  type        = string
+}
+
+variable "route53_domain" {
+  description = "Route53 domain name. Needed for adding URL hostname to Route53"
+  type        = string
+}
+
 variable "image" {
   description = "The container image url/name"
   type        = string

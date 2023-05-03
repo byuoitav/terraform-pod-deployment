@@ -1,6 +1,6 @@
 module "acs" {
   source            = "github.com/byuoitav/terraform//modules/acs-info"
-  env               = "dev"
+  env               = var.environment
   department_name   = "av"
   vpc_vpn_to_campus = true
 }
@@ -9,36 +9,51 @@ data "aws_ssm_parameter" "acm_cert_arn" {
   name = "/acm/av-cert-arn"
 }
 */
-data "aws_ssm_parameter" "r53_zone_id" {
-  name = "/route53/zone/av-id"
+data "aws_route53_zone" "r53_zone" {
+  name = var.route53_domain
 }
 
-data "aws_ssm_parameter" "eks_lb_name" {
-  name = "/eks/lb-name"
+data "aws_eks_cluster" "cluster" {
+  name = var.cluster
 }
 
-data "aws_ssm_parameter" "eks_lb_name_private" {
-  name = "/eks/lb-name-private"
+data "aws_lb" "eks_lb_public" {
+  name = data.aws_eks_cluster.cluster.endpoint
+  tags = {
+    "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx"
+  }
 }
 
-data "aws_ssm_parameter" "eks_cluster_name" {
-  name = "/eks/av-dev-cluster-name"
+data "aws_lb" "eks_lb_private" {
+  name = data.aws_eks_cluster.cluster.endpoint
+  tags = {
+    "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx-private"
+  }
 }
+
+# Defining this variable here to keep the variable decision for load balancer with the line for 
+# determining the load balancer information based on cluster information
+variable "load_balancer" {
+  type    = string
+  default = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
+}
+
+/*
+data "aws_lb" "eks_lb" {
+  name = var.private ? data.aws_ssm_parameter.eks_lb_name_private.value : data.aws_ssm_parameter.eks_lb_name.value
+}
+*/
 
 data "aws_ssm_parameter" "role_boundary" {
   name = "/acs/iam/iamRolePermissionBoundary"
 }
 
-data "aws_lb" "eks_lb" {
-  name = var.private ? data.aws_ssm_parameter.eks_lb_name_private.value : data.aws_ssm_parameter.eks_lb_name.value
-}
-
 data "aws_caller_identity" "current" {}
-
+/*
 data "aws_eks_cluster" "selected" {
   name = data.aws_ssm_parameter.eks_cluster_name.value
 }
-
+*/
 data "aws_iam_policy_document" "eks_oidc_assume_role" {
   statement {
     effect  = "Allow"
@@ -46,7 +61,7 @@ data "aws_iam_policy_document" "eks_oidc_assume_role" {
 
     condition {
       test     = "StringEquals"
-      variable = "${replace(data.aws_eks_cluster.selected.identity.0.oidc.0.issuer, "https://", "")}:sub"
+      variable = "${replace(data.aws_eks_cluster.cluster.identity.0.oidc.0.issuer, "https://", "")}:sub"
       values = [
         "system:serviceaccount:default:${var.name}",
       ]
@@ -54,7 +69,7 @@ data "aws_iam_policy_document" "eks_oidc_assume_role" {
 
     principals {
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(data.aws_eks_cluster.selected.identity.0.oidc.0.issuer, "https://", "")}"
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${replace(data.aws_eks_cluster.cluster.identity.0.oidc.0.issuer, "https://", "")}"
       ]
       type = "Federated"
     }
@@ -62,25 +77,25 @@ data "aws_iam_policy_document" "eks_oidc_assume_role" {
 }
 
 resource "aws_iam_role" "this" {
-  name = "eks-${data.aws_ssm_parameter.eks_cluster_name.value}-${var.name}"
+  name = "eks-${var.cluster}-${var.name}"
 
   assume_role_policy   = data.aws_iam_policy_document.eks_oidc_assume_role.json
   permissions_boundary = data.aws_ssm_parameter.role_boundary.value
 
   tags = {
-    env  = "dev"
+    env  = var.environment
     repo = var.repo_url
   }
 
 }
 
 resource "aws_iam_policy" "this" {
-  name   = "eks-${data.aws_ssm_parameter.eks_cluster_name.value}-${var.name}"
+  name   = "eks-${var.cluster}-${var.name}"
   policy = var.iam_policy_doc
 }
 
 resource "aws_iam_policy_attachment" "this" {
-  name       = "eks-${data.aws_ssm_parameter.eks_cluster_name.value}-${var.name}"
+  name       = "eks-${var.cluster}-${var.name}"
   policy_arn = aws_iam_policy.this.arn
   roles      = [aws_iam_role.this.name]
 }
@@ -263,13 +278,13 @@ resource "kubernetes_service" "this" {
 resource "aws_route53_record" "this" {
   count = length(var.public_urls)
 
-  zone_id = data.aws_ssm_parameter.r53_zone_id.value
+  zone_id = data.aws_route53_zone.r53_zone.id
   name    = var.public_urls[count.index]
   type    = "A"
 
   alias {
-    name                   = data.aws_lb.eks_lb.dns_name
-    zone_id                = data.aws_lb.eks_lb.zone_id
+    name                   = var.load_balancer.dns_name
+    zone_id                = var.load_balancer.zone_id
     evaluate_target_health = false
   }
 }
