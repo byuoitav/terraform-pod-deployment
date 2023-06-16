@@ -40,7 +40,7 @@ data "aws_lb" "eks_lb_private" {
 }
 */
 locals {
-  load_balancer = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
+  load_balancer = var.private ? data.aws_ssm_parameter.eks_lb_name_private.value : data.aws_ssm_parameter.eks_lb_name_public.value
 }
 
 /*
