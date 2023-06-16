@@ -17,7 +17,15 @@ data "aws_eks_cluster" "cluster" {
   name = var.cluster
 }
 
-data "aws_lb" "eks_lb_public" {
+data "aws_ssm_parameter" "eks_lb_name" {
+  name = "/eks/lb-name"
+}
+
+data "aws_ssm_parameter" "eks_lb_name_private" {
+  name = "/eks/lb-name-private"
+}
+
+/*data "aws_lb" "eks_lb_public" {
   name = data.aws_eks_cluster.cluster.endpoint
   tags = {
     "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx"
@@ -30,9 +38,9 @@ data "aws_lb" "eks_lb_private" {
     "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx-private"
   }
 }
-
+*/
 locals {
-  load_balancer = var.private ? data.aws_lb.eks_lb_private.name : data.aws_lb.eks_lb_public.name
+  load_balancer = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
 }
 
 /*
