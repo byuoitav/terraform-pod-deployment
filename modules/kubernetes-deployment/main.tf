@@ -38,7 +38,7 @@ data "aws_lb" "eks_lb_private" {
 # Defining this variable here to keep the variable decision for load balancer with the line for 
 # determining the load balancer information based on cluster information
 variable "load_balancer" {
-  type        = map
+  type        = string
   description = "Variable that determines which type of load balancer is in play and to use that load balancer for deployment"
 }
 
