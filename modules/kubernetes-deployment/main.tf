@@ -35,7 +35,7 @@ data "aws_lb" "eks_lb_private" {
 # determining the load balancer information based on cluster information
 variable "load_balancer" {
   type    = string
-  default = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
+  default = ["var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value"]
 }
 
 /*
