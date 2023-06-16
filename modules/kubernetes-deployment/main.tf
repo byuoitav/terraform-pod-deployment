@@ -38,16 +38,16 @@ data "aws_lb" "eks_lb_private" {
     "kubernetes.io/service-name" = "ingress-nginx/ingress-nginx-private"
   }
 }
-*/
+
 locals {
   load_balancer = var.private ? data.aws_ssm_parameter.eks_lb_name_private.value : data.aws_ssm_parameter.eks_lb_name.value
 }
+*/
 
-/*
 data "aws_lb" "eks_lb" {
   name = var.private ? data.aws_ssm_parameter.eks_lb_name_private.value : data.aws_ssm_parameter.eks_lb_name.value
 }
-*/
+
 
 data "aws_ssm_parameter" "role_boundary" {
   name = "/acs/iam/iamRolePermissionBoundary"
@@ -288,8 +288,8 @@ resource "aws_route53_record" "this" {
   type    = "A"
 
   alias {
-    name                   = local.load_balancer.dns_name
-    zone_id                = local.load_balancer.zone_id
+    name                   = data.aws_lb.eks_lb.dns_name
+    zone_id                = data.aws_lb.eks_lb.zone_id
     evaluate_target_health = false
   }
 }
