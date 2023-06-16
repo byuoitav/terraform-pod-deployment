@@ -31,15 +31,12 @@ data "aws_lb" "eks_lb_private" {
   }
 }
 
-variable "which_loadbalancer" {
-  name = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
-}
-
 # Defining this variable here to keep the variable decision for load balancer with the line for 
 # determining the load balancer information based on cluster information
 variable "load_balancer" {
   type    = string
-  default = which_loadbalancer
+  description = "Variable that determines which type of load balancer is in play and to use that load balancer for deployment"
+  default = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
 }
 
 /*
