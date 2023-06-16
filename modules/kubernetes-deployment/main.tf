@@ -36,7 +36,13 @@ data "aws_lb" "eks_lb_private" {
 variable "load_balancer" {
   type    = string
   description = "Variable that determines which type of load balancer is in play and to use that load balancer for deployment"
-  default = var.private ? data.aws_lb.eks_lb_private.value : data.aws_lb.eks_lb_public.value
+  
+  dynamic "default" { 
+    for_each = var.private ? [data.aws_lb.eks_lb_private.value] : [data.aws_lb.eks_lb_public.value]
+    content {
+      value = default.value
+    }
+  }
 }
 
 /*
