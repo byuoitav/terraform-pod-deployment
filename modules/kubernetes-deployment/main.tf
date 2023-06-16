@@ -31,31 +31,8 @@ data "aws_lb" "eks_lb_private" {
   }
 }
 
-#locals {
-#  load_balancer = var.private ? data.aws_lb.eks_lb_private.id : data.aws_lb.eks_lb_public.id
-#}
-
-# Defining this variable here to keep the variable decision for load balancer with the line for 
-# determining the load balancer information based on cluster information
-variable "load_balancer" {
-  type        = string
-  description = "Variable that determines which type of load balancer is in play and to use that load balancer for deployment"
-}
-
-resource "null_resource" "load_balancer_calculation" {
-  triggers = {
-    private = var.private
-  }
-
-  provisioner "local-exec" {
-    command = <<EOF
-if [ "${var.private}" = "true" ]; then
-  echo "export load_balancer='${data.aws_lb.eks_lb_private.id}'" >> load_balancer.auto.tfvars
-else
-  echo "export load_balancer='${data.aws_lb.eks_lb_public.id}'" >> load_balancer.auto.tfvars
-fi
-EOF
-  }
+locals {
+  load_balancer = var.private ? data.aws_lb.eks_lb_private.id : data.aws_lb.eks_lb_public.id
 }
 
 /*
@@ -303,8 +280,8 @@ resource "aws_route53_record" "this" {
   type    = "A"
 
   alias {
-    name                   = var.load_balancer.dns_name
-    zone_id                = var.load_balancer.zone_id
+    name                   = local.load_balancer.dns_name
+    zone_id                = local.load_balancer.zone_id
     evaluate_target_health = false
   }
 }
