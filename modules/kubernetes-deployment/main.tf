@@ -32,7 +32,7 @@ data "aws_lb" "eks_lb_private" {
 }
 
 locals {
-  load_balancer = var.private ? data.aws_lb.eks_lb_private.id : data.aws_lb.eks_lb_public.id
+  load_balancer = var.private ? data.aws_lb.eks_lb_private.name : data.aws_lb.eks_lb_public.name
 }
 
 /*
