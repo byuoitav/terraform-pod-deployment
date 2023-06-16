@@ -31,16 +31,31 @@ data "aws_lb" "eks_lb_private" {
   }
 }
 
-locals {
-  load_balancer = var.private ? data.aws_lb.eks_lb_private.id : data.aws_lb.eks_lb_public.id
-}
+#locals {
+#  load_balancer = var.private ? data.aws_lb.eks_lb_private.id : data.aws_lb.eks_lb_public.id
+#}
 
 # Defining this variable here to keep the variable decision for load balancer with the line for 
 # determining the load balancer information based on cluster information
 variable "load_balancer" {
   type        = map
   description = "Variable that determines which type of load balancer is in play and to use that load balancer for deployment"
-  default     = local.load_balancer
+}
+
+resource "null_resource" "load_balancer_calculation" {
+  triggers = {
+    private = var.private
+  }
+
+  provisioner "local-exec" {
+    command = <<EOF
+if [ "${var.private}" = "true" ]; then
+  echo "export load_balancer='${data.aws_lb.eks_lb_private.id}'" >> load_balancer.auto.tfvars
+else
+  echo "export load_balancer='${data.aws_lb.eks_lb_public.id}'" >> load_balancer.auto.tfvars
+fi
+EOF
+  }
 }
 
 /*
