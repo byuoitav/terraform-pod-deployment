@@ -328,8 +328,12 @@ resource "kubernetes_ingress_v1" "this" {
         http {
           path {
             backend {
-              service_name = kubernetes_service.this.metadata.0.name
-              service_port = 80
+              service {
+                name = kubernetes_service.this.metadata.0.name
+                port {
+                  number = 80
+                }
+              }
             }
           }
         }
