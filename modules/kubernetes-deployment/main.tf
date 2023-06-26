@@ -294,7 +294,7 @@ resource "aws_route53_record" "this" {
   }
 }
 
-resource "kubernetes_ingress" "this" {
+resource "kubernetes_ingress_v1" "this" {
   // only create the ingress if there is at least one public url
   count = length(var.public_urls) > 0 ? 1 : 0
 
