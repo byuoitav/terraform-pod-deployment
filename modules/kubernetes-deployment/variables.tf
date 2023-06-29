@@ -65,7 +65,7 @@ variable "public_urls" {
 variable "star_certificate" {
   description = "The publicly exposed URLs of the service"
   type        = string
-  default     = "star-av-byu-edu"
+  default     = "star-avdev-byu-edu"
 }
 
 variable "ingress_annotations" {
