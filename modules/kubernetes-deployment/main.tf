@@ -1,9 +1,15 @@
+// ----------------------------------------------------
+// Modules
+// ----------------------------------------------------
 module "acs" {
   source            = "github.com/byuoitav/terraform//modules/acs-info"
   env               = var.environment
   department_name   = "av"
   vpc_vpn_to_campus = true
 }
+// ----------------------------------------------------
+// Variables
+// ----------------------------------------------------
 /*
 data "aws_ssm_parameter" "acm_cert_arn" {
   name = "/acm/av-cert-arn"
@@ -59,6 +65,10 @@ data "aws_eks_cluster" "selected" {
   name = data.aws_ssm_parameter.eks_cluster_name.value
 }
 */
+
+// ----------------------------------------------------
+// IAM Role
+// ----------------------------------------------------
 data "aws_iam_policy_document" "eks_oidc_assume_role" {
   statement {
     effect  = "Allow"
@@ -105,6 +115,9 @@ resource "aws_iam_policy_attachment" "this" {
   roles      = [aws_iam_role.this.name]
 }
 
+// ----------------------------------------------------
+// K8s Deployment, Service, Ingress
+// ----------------------------------------------------
 resource "kubernetes_service_account" "this" {
   metadata {
     name = var.name
@@ -307,7 +320,7 @@ resource "kubernetes_ingress_v1" "this" {
     }
 
     annotations = merge(var.ingress_annotations, {
-      "kubernetes.io/ingress.class"                    = "nginx"
+      "kubernetes.io/ingress.class"                    = "ingress-nginx"
       "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
       "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
     })
