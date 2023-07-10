@@ -263,10 +263,7 @@ resource "kubernetes_deployment" "this" {
 
   provisioner "remote-exec" {
     inline = [
-      "apk add tzdata",
-      "cp /usr/share/zoneinfo/America/Denver /etc/localtime",
-      "echo 'America/Denver' > /etc/timezone",
-      "date"
+      "setup-timezone -z America/Denver",
     ]
   }
 
