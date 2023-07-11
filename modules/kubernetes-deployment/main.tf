@@ -261,12 +261,6 @@ resource "kubernetes_deployment" "this" {
     }
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "setup-timezone -z America/Denver",
-    ]
-  }
-
   timeouts {
     create = "5m"
     update = "5m"
