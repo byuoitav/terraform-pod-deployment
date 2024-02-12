@@ -2,7 +2,8 @@
 // Modules
 // ----------------------------------------------------
 module "acs" {
-  source            = "github.com/byuoitav/terraform//modules/acs-info"
+  source            = "github.com/byu-oit/terraform-aws-acs-info.git?ref=v4.0.0"
+  # source            = "github.com/byuoitav/terraform//modules/acs-info"
   env               = var.environment
   department_name   = "av"
   vpc_vpn_to_campus = true
