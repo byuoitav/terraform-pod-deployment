@@ -299,8 +299,8 @@ resource "kubernetes_ingress_v1" "this" {
 
     annotations = merge(var.ingress_annotations, {
       "kubernetes.io/ingress.class"                    = "ingress-nginx"
-      "nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
-      "nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
+      //"nginx.ingress.kubernetes.io/ssl-redirect"       = "true"
+      //"nginx.ingress.kubernetes.io/force-ssl-redirect" = "true"
     })
   }
 
